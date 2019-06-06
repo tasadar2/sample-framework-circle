@@ -1,0 +1,55 @@
+version: 2.1
+
+orbs:
+  win: sandbox/windows-tools@dev:preview
+
+workflows:
+  build:
+    jobs:
+      - build
+
+jobs:
+    build:
+        executor: win/preview-default
+        #docker:
+        #    - image: mcr.microsoft.com/dotnet/framework/sdk:4.8
+        steps:
+            - checkout
+            - run:
+                name: dir
+                command: dir
+                shell: cmd.exe
+            - run:
+                name: install script
+                command: |
+                    .\dotnet-install.ps1
+                    echo "$env:PATH"
+                shell: powershell.exe
+            - run:
+                name: install exe
+                command: |
+                    .\NDP461-KB3102438-Web.exe /install /passive /norestart
+                    echo "$env:PATH"
+                shell: powershell.exe
+            # Ideally I would use choco to handle the installation of dotnet, however this requires a restart
+            #- run: 
+            #    name: install framework
+            #    command: choco install netfx-4.8-devpack --pre
+            - run:
+                name: Restore packages
+                environment:
+                    - PATH: "C:\\Users\\circleci\\AppData\\Local\\Microsoft\\dotnet;C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Windows\\System32\\OpenSSH;C:\\ProgramData\\GooGet;C:\\Program Files\\Google\\Compute Engine\\metadata_scripts;C:\\Program Files (x86)\\Google\\Cloud SDK\\google-cloud-sdk\\bin;C:\\Program Files\\Google\\Compute Engine\\sysprep;C:\\ProgramData\\Chocolatey\\bin;C:\\Program Files\\Git\\cmd;C:\\Program Files\\Git\\mingw64\\bin;C:\\Program Files\\Git\\usr\\bin;C:\\Program Files\\Git LFS;C:\\Windows\\system32\\config\\systemprofile\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\circleci\\AppData\\Local\\Microsoft\\WindowsApps"
+                command: dotnet restore
+                shell: powershell.exe
+            - run:
+                name: Build TestingFrameworkApp
+                environment:
+                    - PATH: "C:\\Users\\circleci\\AppData\\Local\\Microsoft\\dotnet;C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Windows\\System32\\OpenSSH;C:\\ProgramData\\GooGet;C:\\Program Files\\Google\\Compute Engine\\metadata_scripts;C:\\Program Files (x86)\\Google\\Cloud SDK\\google-cloud-sdk\\bin;C:\\Program Files\\Google\\Compute Engine\\sysprep;C:\\ProgramData\\Chocolatey\\bin;C:\\Program Files\\Git\\cmd;C:\\Program Files\\Git\\mingw64\\bin;C:\\Program Files\\Git\\usr\\bin;C:\\Program Files\\Git LFS;C:\\Windows\\system32\\config\\systemprofile\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\circleci\\AppData\\Local\\Microsoft\\WindowsApps"
+                command: |
+                    .\NDP461-KB3102438-Web.exe /install /passive /norestart
+                    dotnet build --configuration Release
+            - persist_to_workspace:
+                root: ~/
+                paths:
+                    - .nuget
+                    - app
