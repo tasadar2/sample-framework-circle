@@ -1,12 +1,12 @@
 version: 2.1
 
 orbs:
-  win: sandbox/windows-tools@dev:preview
+    win: sandbox/windows-tools@dev:preview
 
 workflows:
-  build:
-    jobs:
-      - build
+    build:
+        jobs:
+            - build
 
 jobs:
     build:
